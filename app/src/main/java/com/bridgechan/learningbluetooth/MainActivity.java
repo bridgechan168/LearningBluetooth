@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnOff = findViewById(R.id.btnOff);
         btnShow = findViewById(R.id.btnShow);
         btnDiscover = findViewById(R.id.btnDiscover);
-        listviewShow = findViewById(R.id.listviewPared);
+        listviewShow = findViewById(R.id.listviewPaired);
         listviewDiscover = findViewById(R.id.listviewDiscover);
         layoutCarControl = findViewById(R.id.layout_car_control);
         btnForward = findViewById(R.id.btnForward);
@@ -106,16 +107,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void setButtons(Boolean flag){
         if(flag){
-            btnRight.setVisibility(View.VISIBLE);
-            btnForward.setVisibility(View.VISIBLE);
-            btnLeft.setVisibility(View.VISIBLE);
-            btnBack.setVisibility(View.VISIBLE);
             layoutCarControl.setVisibility(View.VISIBLE);
         }else{
-            btnRight.setVisibility(View.GONE);
-            btnForward.setVisibility(View.GONE);
-            btnLeft.setVisibility(View.GONE);
-            btnBack.setVisibility(View.GONE);
             layoutCarControl.setVisibility(View.GONE);
         }
     }
@@ -173,17 +166,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             adapBluetooth.disable();
             showToastMessage("Off successfully");
+            showPaired();
         }
     }
+
     private void showPaired(){
+        adapPairedDevices.clear();
+        arrPairedDevices.clear();
         if(!adapBluetooth.isEnabled()){
             showToastMessage("Bluetooth is not on");
+            listviewShow.deferNotifyDataSetChanged();
             return ;
         }
         adapBluetooth.cancelDiscovery();
         pairedDevices = adapBluetooth.getBondedDevices();
-        adapPairedDevices.clear();
-        arrPairedDevices.clear();
+
         if(pairedDevices.size() > 0){
             for(BluetoothDevice device : pairedDevices){
                 String name = device.getName();
@@ -253,11 +250,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        switch(view.getId()){
+        switch(parent.getId()){
             case R.id.listviewDiscover:
                 pairDevice(position);
                 break;
-            case R.id.listviewPared:
+            case R.id.listviewPaired:
                 connectDevice(position);
                 break;
         }
@@ -285,12 +282,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mmSocket = null;
             connected = null;
             this.device = device;
-            myUUID = UUID.fromString("00001100-0000-1000-8000-00805F9B34FB");
+            myUUID = device.getUuids()[0].getUuid();
+                    //UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
             try{
-                mmSocket = device.createRfcommSocketToServiceRecord(myUUID);
-            }catch(IOException e){
-                Log.e("tester","socket creation failed",e);
+                mmSocket = createBluetoothSocket();
+                Log.i("tester","socket is nothing:" + (mmSocket==null) + ",uuid:" +myUUID);
+            }catch(Exception e){
+                Log.i("tester","socket creation failed" + e.getMessage(),e);
             }
+        }
+        private BluetoothSocket createBluetoothSocket(){
+            BluetoothSocket tmp = null;
+            try{
+                //tmp = device.createInsecureRfcommSocketToServiceRecord(myUUID);
+                Method m = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class });
+                tmp = (BluetoothSocket) m.invoke(device, 1);
+                Log.i("tester","create socket");
+            }catch(Exception e){
+                Log.i("tester","fail to create insecureRFcommSocket" + e.getMessage(),e);
+                try{
+                    tmp = device.createRfcommSocketToServiceRecord(myUUID);
+                }catch(Exception e1){
+                    Log.i("tester","fail to create RFcommSocket" + e1.getMessage(),e1);
+                }
+            }
+            return tmp;
         }
         @Override
         public void run() {
@@ -300,10 +317,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Message msg = mHandler.obtainMessage(MESSAGE_CONNECTED,1,1,this);
                 msg.sendToTarget();
             }catch(IOException e){
+                Log.i("tester","could not connect client socket" + e.getMessage(),e);
                 try{
                     mmSocket.close();
                 }catch(IOException eClose){
-                    Log.e("tester","could not close client socket",e);
+                    Log.i("tester","could not close client socket",e);
                 }
                 return ;
             }
@@ -316,6 +334,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         public void sendData(String data){
             if(mmSocket.isConnected()){
+                Log.i("tester","start sending data");
                 connected.write(data);
             }
         }

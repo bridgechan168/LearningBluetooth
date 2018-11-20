@@ -39,12 +39,12 @@
         app:layout_constraintLeft_toRightOf="@id/btnShow"/>
 
     <ListView
-        android:id="@+id/listviewPared"
+        android:id="@+id/listviewPaired"
         android:layout_width="match_parent"
         android:layout_height="150dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnShow"
-        android:visibility="invisible"/>
+        android:visibility="gone"/>
 
     <ListView
         android:id="@+id/listviewDiscover"
@@ -56,7 +56,9 @@
     <!--transfer data to bluetooth -->
     <include android:id="@+id/layout_car_control"
         layout="@layout/layout_car_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnShow"/>
+        app:layout_constraintTop_toBottomOf="@id/listviewPaired"/>
 </android.support.constraint.ConstraintLayout>
