@@ -10,14 +10,19 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Message;
 import android.support.constraint.ConstraintLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         btnOn = findViewById(R.id.btnOn);
         btnOff = findViewById(R.id.btnOff);
         btnShow = findViewById(R.id.btnShow);
@@ -84,8 +90,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         arrPairedDevices = new ArrayList<BluetoothDevice>();
 
         createHandler();
+        //setSystemBarsDim(true);
     }
-
+    private void setSystemBarsDim(boolean flag){
+        View decorView = this.getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+        decorView.setSystemUiVisibility(uiOptions);
+        ActionBar bar = getSupportActionBar();
+        bar.hide();
+    }
     private void createHandler(){
         mHandler = new Handler(){
             @Override
@@ -143,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnRight:
                 sendData2BT("Right");
                 break;
+
         }
     }
     private void showToastMessage(String msg){
@@ -197,6 +211,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         unregisterReceiver(receiverBT);
         turnOff();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.my_menu,menu);
+
+        MenuItem searchItem = menu.findItem(R.id.app_bar_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                showToastMessage(searchView.getQuery().toString());
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        return true;
     }
 
     private void discover(){
