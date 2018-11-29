@@ -8,4 +8,5 @@
     <string name="btnBack">Back</string>
     <string name="btnLeft">Left</string>
     <string name="btnRight">Right</string>
+    <string name="btnStop">Stop</string>
 </resources>

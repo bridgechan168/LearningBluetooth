@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,ListView.OnItemClickListener{
-    private Button btnOn, btnOff, btnShow, btnDiscover, btnForward, btnLeft, btnBack, btnRight;
+    private Button btnOn, btnOff, btnShow, btnDiscover, btnForward, btnLeft, btnBack, btnRight, btnStop;
     private ListView listviewShow, listviewDiscover;
     private ConstraintLayout layoutCarControl;
     private BluetoothAdapter adapBluetooth;
@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnBack = findViewById(R.id.btnBack);
         btnLeft = findViewById(R.id.btnLeft);
         btnRight = findViewById(R.id.btnRight);
+        btnStop = findViewById(R.id.btnStop);
 
         btnOn.setOnClickListener(this);
         btnOff.setOnClickListener(this);
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnBack.setOnClickListener(this);
         btnLeft.setOnClickListener(this);
         btnRight.setOnClickListener(this);
+        btnStop.setOnClickListener(this);
 
         adapBluetooth = BluetoothAdapter.getDefaultAdapter();
         if(adapBluetooth == null){
@@ -156,6 +158,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnRight:
                 sendData2BT("Right");
                 break;
+            case R.id.btnStop:
+                sendData2BT("Stop");
+                break;
 
         }
     }
@@ -187,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void showPaired(){
         adapPairedDevices.clear();
         arrPairedDevices.clear();
+        setButtons(false);
         if(!adapBluetooth.isEnabled()){
             showToastMessage("Bluetooth is not on");
             listviewShow.deferNotifyDataSetChanged();
@@ -236,6 +242,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void discover(){
+        setButtons(false);
         if(adapBluetooth.isDiscovering()){
             adapBluetooth.cancelDiscovery();
             showToastMessage("Discovery stopped");
